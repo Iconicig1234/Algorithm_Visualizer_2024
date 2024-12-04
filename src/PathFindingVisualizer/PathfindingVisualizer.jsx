@@ -1,14 +1,8 @@
 
-
 import React, { Component } from "react";
 import Node from './Node/Node';
 import './PathfindingVisualizer.css';
 import { dijkstra, getNodeInSortestPathOrder } from "./Algorithms/Dijkstra";
-
-const start_row_node = 10;
-const start_col_node = 20;
-const end_row_node = 15;
-const end_col_node = 50;
 
 export default class PathfindingVisualizer extends Component {
     constructor(props) {
@@ -18,6 +12,8 @@ export default class PathfindingVisualizer extends Component {
             mouseIsPressed: false,
             numRows: 0,
             numCols: 0,
+            startNode: null,
+            finishNode: null,
         };
         this.updateGridSize = this.updateGridSize.bind(this);
     }
@@ -35,8 +31,19 @@ export default class PathfindingVisualizer extends Component {
         const gridCellSize = 25; // Each cell is 25x25 pixels
         const numRows = Math.floor(window.innerHeight / gridCellSize) - 5; // Adjust to leave space for the navbar
         const numCols = Math.floor(window.innerWidth / gridCellSize) - 5;
-        const grid = getInitialGrid(numRows, numCols);
-        this.setState({ grid, numRows, numCols });
+
+        // Generate random start and finish nodes
+        const startNode = {
+            row: Math.floor(Math.random() * numRows),
+            col: Math.floor(Math.random() * numCols),
+        };
+        const finishNode = {
+            row: Math.floor(Math.random() * numRows),
+            col: Math.floor(Math.random() * numCols),
+        };
+
+        const grid = getInitialGrid(numRows, numCols, startNode, finishNode);
+        this.setState({ grid, numRows, numCols, startNode, finishNode });
     }
 
     handleMouseDown(row, col) {
@@ -84,11 +91,11 @@ export default class PathfindingVisualizer extends Component {
     }
 
     visualizeDijkstra() {
-        const { grid } = this.state;
-        const startNode = grid[start_row_node][start_col_node];
-        const finishNode = grid[end_row_node][end_col_node];
-        const visitedNodesInOrder = dijkstra(grid, startNode, finishNode);
-        const nodeInSortestPathOrder = getNodeInSortestPathOrder(finishNode);
+        const { grid, startNode, finishNode } = this.state;
+        const startGridNode = grid[startNode.row][startNode.col];
+        const finishGridNode = grid[finishNode.row][finishNode.col];
+        const visitedNodesInOrder = dijkstra(grid, startGridNode, finishGridNode);
+        const nodeInSortestPathOrder = getNodeInSortestPathOrder(finishGridNode);
         this.animateDijkstra(visitedNodesInOrder, nodeInSortestPathOrder);
     }
 
@@ -217,24 +224,24 @@ export default class PathfindingVisualizer extends Component {
 // Event Handling for Interactivity:
 // The event handlers (onMouseDown, onMouseEnter, onMouseUp) allow users to toggle walls interactively, enhancing the user experience.
 
-const getInitialGrid = (numRows, numCols) => {
+const getInitialGrid = (numRows, numCols, startNode, finishNode) => {
     const grid = [];
     for (let row = 0; row < numRows; row++) {
         const currRow = [];
         for (let col = 0; col < numCols; col++) {
-            currRow.push(createNode(col, row));
+            currRow.push(createNode(col, row, startNode, finishNode));
         }
         grid.push(currRow);
     }
     return grid;
 };
 
-const createNode = (col, row) => {
+const createNode = (col, row, startNode, finishNode) => {
     return {
         col,
         row,
-        isStart: row === start_row_node && col === start_col_node,
-        isFinish: row === end_row_node && col === end_col_node,
+        isStart: row === startNode.row && col === startNode.col,
+        isFinish: row === finishNode.row && col === finishNode.col,
         distance: Infinity,
         isVisited: false,
         isWall: false,
