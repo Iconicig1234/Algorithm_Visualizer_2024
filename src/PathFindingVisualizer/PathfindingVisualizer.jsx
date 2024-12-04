@@ -16,12 +16,27 @@ export default class PathfindingVisualizer extends Component {
         this.state = {
             grid: [],
             mouseIsPressed: false,
+            numRows: 0,
+            numCols: 0,
         };
+        this.updateGridSize = this.updateGridSize.bind(this);
     }
 
     componentDidMount() {
-        const grid = getInitialGrid();
-        this.setState({ grid });
+        this.updateGridSize();
+        window.addEventListener("resize", this.updateGridSize);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.updateGridSize);
+    }
+
+    updateGridSize() {
+        const gridCellSize = 25; // Each cell is 25x25 pixels
+        const numRows = Math.floor(window.innerHeight / gridCellSize) - 5; // Adjust to leave space for the navbar
+        const numCols = Math.floor(window.innerWidth / gridCellSize) - 5;
+        const grid = getInitialGrid(numRows, numCols);
+        this.setState({ grid, numRows, numCols });
     }
 
     handleMouseDown(row, col) {
@@ -202,11 +217,11 @@ export default class PathfindingVisualizer extends Component {
 // Event Handling for Interactivity:
 // The event handlers (onMouseDown, onMouseEnter, onMouseUp) allow users to toggle walls interactively, enhancing the user experience.
 
-const getInitialGrid = () => {
+const getInitialGrid = (numRows, numCols) => {
     const grid = [];
-    for (let row = 0; row < 21; row++) {
+    for (let row = 0; row < numRows; row++) {
         const currRow = [];
-        for (let col = 0; col < 60; col++) {
+        for (let col = 0; col < numCols; col++) {
             currRow.push(createNode(col, row));
         }
         grid.push(currRow);
